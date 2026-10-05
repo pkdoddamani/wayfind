@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wayfind — where are your skills wanted?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{
+  --paper:#F4F7F6; --surface:#FFFFFF; --ink:#13263F; --ink-soft:#4A5B70; --line:#D5DFDC;
+  --sea:#DDEBE7; --ok:#0E7C66; --ok-bg:#E1F2EC; --maybe:#8F6200; --maybe-bg:#FBF0D3;
+  --gap:#A63D2A; --gap-bg:#F8E3DE; --focus:#2B6CB0; --tkt:#13263F; --tkt-ink:#F4F7F6;
+  --display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Public Sans","Segoe UI",Roboto,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1B2A; --surface:#16263A; --ink:#E7EEF3; --ink-soft:#A9B8C6; --line:#2A3D53;
+    --sea:#1C3346; --ok:#4CC3A3; --ok-bg:#16362F; --maybe:#E7B54A; --maybe-bg:#3A3018;
+    --gap:#EE8B75; --gap-bg:#3D2420; --focus:#7FB2F0; --tkt:#E7EEF3; --tkt-ink:#0F1B2A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1B2A; --surface:#16263A; --ink:#E7EEF3; --ink-soft:#A9B8C6; --line:#2A3D53;
+  --sea:#1C3346; --ok:#4CC3A3; --ok-bg:#16362F; --maybe:#E7B54A; --maybe-bg:#3A3018;
+  --gap:#EE8B75; --gap-bg:#3D2420; --focus:#7FB2F0; --tkt:#E7EEF3; --tkt-ink:#0F1B2A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+main{max-width:580px;margin:0 auto;padding:24px 20px 64px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;line-height:1.15;letter-spacing:-.01em}
+h1{font-size:clamp(31px,8.5vw,42px);font-weight:800}
+h2{font-size:25px;font-weight:700}
+h3{font-size:19px;font-weight:700}
+p{margin:0}
+.muted{color:var(--ink-soft)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:34px;font-family:var(--display);font-weight:800;font-size:18px}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;padding:12px 18px;border-radius:12px;border:0;cursor:pointer;font-weight:600;font-size:16px;text-align:center}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-ghost{background:transparent;border:1.5px solid var(--line)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-link{background:none;border:0;padding:8px 0;cursor:pointer;color:var(--ink-soft);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.stack>*+*{margin-top:12px}
+.screen{display:none}.screen.active{display:block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lede{font-size:18px;margin-top:14px;color:var(--ink-soft);max-width:36ch}
+
+.drop{margin-top:30px;border:2px dashed var(--line);border-radius:16px;padding:26px 20px;text-align:center;background:var(--surface);transition:border-color .15s}
+.drop.over{border-color:var(--ink)}
+.drop p+p{margin-top:4px}
+.drop .btn{margin-top:18px}
+.paste{margin-top:14px;text-align:left}
+.paste textarea{width:100%;min-height:150px;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper);resize:vertical}
+.paste .btn{margin-top:10px}
+.consent{display:flex;gap:10px;align-items:flex-start;text-align:left;margin-top:16px;font-size:14px;cursor:pointer}
+.consent input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--ink)}
+.privacy a{color:inherit}
+.proto{font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--maybe-bg);color:var(--maybe);margin-left:4px}
+.privacy{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;color:var(--ink-soft)}
+.err{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--gap-bg);color:var(--gap);font-size:15px}
+.err[hidden]{display:none}
+.samples{margin-top:30px}
+.samples h3{font-size:16px;margin-bottom:10px}
+.sample{display:block;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.sample+.sample{margin-top:8px}
+.sample strong{display:block;font-weight:600}
+.sample span{font-size:14px;color:var(--ink-soft)}
+.coverage{margin-top:30px;font-size:14px;color:var(--ink-soft)}
+.coverage b{color:var(--ink);font-weight:600}
+
+.reading{margin-top:28px}
+.rsteps{list-style:none;margin:22px 0 0;padding:0}
+.rsteps li{display:flex;gap:12px;align-items:center;padding:10px 0;color:var(--ink-soft)}
+.rsteps li.now{color:var(--ink);font-weight:600}
+.rsteps li.done{color:var(--ink)}
+.rsteps .ind{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+.rsteps li.now .ind{border-color:var(--ink);border-top-color:transparent;animation:sp .8s linear infinite}
+.rsteps li.done .ind{background:var(--ok-bg);border-color:var(--ok-bg);color:var(--ok)}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.found{margin-top:18px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px}
+.found .who{font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--sea)}
+.note{background:var(--sea);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:16px}
+.note[hidden]{display:none}
+.field{margin-top:18px}
+.field label{display:block;font-weight:600;margin-bottom:6px}
+.field select,.field input{width:100%;min-height:48px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface)}
+.field small{display:block;margin-top:5px;font-size:13px;color:var(--ink-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.group{margin-top:28px;padding-top:6px}
+.group>h3{font-size:16px}
+.group>p{font-size:14px;color:var(--ink-soft);margin-top:4px}
+.actions{margin-top:28px}
+.careers{border:0;padding:0;margin:18px 0 0}
+.careers legend{font-weight:600;margin-bottom:8px;padding:0}
+.career{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.career+.career{margin-top:8px}
+.career:has(input:checked){border-color:var(--ink)}
+.career input{margin-top:4px;accent-color:var(--ink);width:18px;height:18px}
+.career strong{display:block;font-weight:600}
+.career span span{font-size:14px;color:var(--ink-soft)}
+.couple{margin-top:20px;padding:16px;border-radius:16px;background:var(--sea)}
+.couple h3{font-size:17px}
+.couple p{font-size:15px;margin-top:6px}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
+.summary{margin-top:8px;color:var(--ink-soft)}
+.ticket{position:relative;margin-top:22px;background:var(--tkt);color:var(--tkt-ink);border-radius:18px;padding:22px 22px 20px;overflow:hidden}
+.ticket .route{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:800;font-size:clamp(34px,11vw,46px);letter-spacing:.02em;line-height:1}
+.ticket .path{flex:1;height:2px;background:repeating-linear-gradient(90deg,currentColor 0 8px,transparent 8px 14px);opacity:.55;position:relative}
+.ticket .path::after{content:"";position:absolute;right:-2px;top:-5px;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.ticket .places{display:flex;justify-content:space-between;font-size:13px;opacity:.75;margin-top:6px}
+.ticket .perf{margin:18px -22px;border-top:2px dashed color-mix(in srgb,var(--tkt-ink) 30%,transparent);position:relative}
+.ticket .perf::before,.ticket .perf::after{content:"";position:absolute;top:-12px;width:22px;height:22px;border-radius:50%;background:var(--paper)}
+.ticket .perf::before{left:-11px}.ticket .perf::after{right:-11px}
+.ticket dl{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin:0}
+.ticket dt{font-size:13px;opacity:.7}
+.ticket dd{margin:2px 0 0;font-weight:600}
+.ticket dd small{display:block;font-weight:400;opacity:.75;font-size:13px}
+.ticket .open{margin-top:18px;background:var(--tkt-ink);color:var(--tkt)}
+.badge{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.b-strong{background:var(--ok-bg);color:var(--ok)}
+.b-possible{background:var(--maybe-bg);color:var(--maybe)}
+.b-stretch{background:var(--gap-bg);color:var(--gap)}
+.ticket .badge{margin-bottom:14px}
+
+.whatif{margin-top:32px}
+.whatif p{font-size:14px;color:var(--ink-soft);margin-top:4px}
+.toggles{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tg{min-height:40px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;font-size:14px;font-weight:600}
+.tg[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.delta{margin-top:12px;font-size:14px;padding:10px 12px;border-radius:10px;background:var(--sea)}
+.delta[hidden]{display:none}
+
+.list{margin-top:14px;border-top:1px solid var(--line)}
+.item{border-bottom:1px solid var(--line)}
+.item>button{width:100%;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;padding:16px 2px;background:none;border:0;text-align:left;cursor:pointer}
+.code{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.02em}
+.item .name{font-weight:600}
+.item .sub{font-size:14px;color:var(--ink-soft)}
+.right{display:flex;align-items:center;gap:8px}
+.chev{transition:transform .2s ease}
+.item.open .chev{transform:rotate(180deg)}
+.detail{padding:0 2px 24px}
+.detail[hidden]{display:none}
+.detail h4{font-size:15px;margin:20px 0 8px}
+.gates{list-style:none;margin:0;padding:0}
+.gates li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:7px 0;font-size:15px}
+.gates .dot{width:19px;height:19px;border-radius:50%;margin-top:2px;display:grid;place-items:center;font-size:11px;font-weight:700}
+.s-ok .dot{background:var(--ok-bg);color:var(--ok)}
+.s-maybe .dot{background:var(--maybe-bg);color:var(--maybe)}
+.s-gap .dot{background:var(--gap-bg);color:var(--gap)}
+.gates b{font-weight:600}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pay div{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.pay span{display:block;font-size:13px;color:var(--ink-soft)}
+.pay strong{font-weight:600}
+.fine{font-size:13px;color:var(--ink-soft);margin-top:6px}
+.module{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:15px}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--sea);margin-left:6px;vertical-align:1px}
+.steps{margin:0;padding-left:20px}
+.steps li{padding:3px 0;font-size:15px}
+.alt{font-size:15px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px}
+.detail .btn{margin-top:18px}
+.src{font-size:13px;color:var(--ink-soft);margin-top:14px}
+
+.plan{margin-top:36px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:18px}
+.plan p{font-size:14px;color:var(--ink-soft);margin-top:4px}
+.plan ol{margin:14px 0 0;padding-left:22px}
+.plan li{padding:5px 0}
+.plan li span{display:block;font-size:13px;color:var(--ink-soft)}
+.soon{margin-top:26px;font-size:14px;color:var(--ink-soft)}
+.legal{margin-top:26px;padding:16px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);font-size:14px}
+.legal h3{font-size:16px;margin-bottom:6px}
+.legal p+p{margin-top:8px}
+.foot{margin-top:26px;font-size:13px;color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+
+dialog{border:0;border-radius:18px;padding:22px;max-width:440px;width:calc(100% - 32px);background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,20,35,.5)}
+dialog p{margin-top:10px}
+dialog .btn{margin-top:18px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 19 L14 7 L20 19 L14 15.5 Z" fill="currentColor"/></svg>
+    Wayfind <span class="proto">Prototype</span>
+  </div>
+
+  <section class="screen active" id="s-upload" aria-labelledby="h-upload">
+    <h1 id="h-upload" tabindex="-1">Where in the world are your skills wanted?</h1>
+    <p class="lede">Upload your resume. We compare your profile with official visa rules in six countries and show where you have a real chance, and what's in the way.</p>
+
+    <div class="drop" id="drop">
+      <p><strong>Your resume</strong></p>
+      <p class="muted">PDF, Word or text file, up to 5 MB</p>
+      <label class="consent"><input type="checkbox" id="consent"> <span>I agree to my resume text being sent to Wayfind's AI provider to read it.</span></label>
+      <label class="btn btn-primary" for="file">Upload resume</label>
+      <input id="file" class="sr" type="file" accept=".pdf,.docx,.txt">
+      <button class="btn-link" id="paste-toggle" aria-expanded="false" aria-controls="paste">Or paste your resume or LinkedIn profile</button>
+      <div class="paste" id="paste" hidden>
+        <label class="sr" for="paste-text">Resume text</label>
+        <textarea id="paste-text" placeholder="Paste your work history, education and skills"></textarea>
+        <button class="btn btn-primary" id="paste-go">Read this text</button>
+      </div>
+    </div>
+    <p class="privacy"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="flex:none;margin-top:2px"><rect x="3.5" y="8" width="11" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Before your resume is read, we remove email addresses, phone numbers and web links. Wayfind doesn't keep your resume. It's read by our AI provider, Xiaomi MiMo, which processes data in China under <a href="https://privacy.mi.com/XiaomiMiMoPlatform/en_GB/" target="_blank" rel="noopener">its privacy policy</a>.</span></p>
+    <p class="err" id="upload-err" role="alert" hidden></p>
+
+    <div class="samples">
+      <h3>No resume handy? Try a sample profile</h3>
+      <button class="sample" data-sample="0"><strong>Priya, backend engineer</strong><span>6 years, bachelor's, India</span></button>
+      <button class="sample" data-sample="1"><strong>Tunde, data scientist</strong><span>3 years, master's, Nigeria</span></button>
+      <button class="sample" data-sample="2"><strong>Maria, registered nurse</strong><span>8 years, bachelor's, Philippines</span></button>
+    </div>
+    <p class="coverage">Covers <b>USA, Canada, UK, Germany, Australia and the Netherlands</b>. Ireland, New Zealand, UAE and Singapore are coming next.</p>
+  </section>
+
+  <section class="screen" id="s-reading" aria-labelledby="h-reading">
+    <h2 id="h-reading" tabindex="-1">Reading your resume</h2>
+    <p class="summary" id="reading-file"></p>
+    <ul class="rsteps" aria-live="polite">
+      <li id="r1"><span class="ind" aria-hidden="true"></span>Opening the file</li>
+      <li id="r2"><span class="ind" aria-hidden="true"></span>Finding your experience, education and skills</li>
+      <li id="r3"><span class="ind" aria-hidden="true"></span>Matching your occupation to visa categories</li>
+    </ul>
+    <div class="actions"><button class="btn btn-ghost" id="stop">Stop and fill in manually</button></div>
+  </section>
+
+  <section class="screen" id="s-profile" aria-labelledby="h-profile">
+    <h2 id="h-profile" tabindex="-1">Check your profile</h2>
+    <p class="summary">Correct anything that's off. These details decide which visa rules apply to you.</p>
+    <div class="found" id="found" hidden></div>
+    <p class="note" id="profile-note" hidden></p>
+
+    <div class="group">
+      <h3>From your resume</h3>
+      <fieldset class="careers" id="careers" hidden></fieldset>
+      <div class="field">
+        <label for="occ">Occupation</label>
+        <select id="occ"></select>
+        <small id="occ-hint"></small>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="years">Years of experience</label><input id="years" type="number" min="0" max="45" inputmode="numeric"></div>
+        <div class="field"><label for="degree">Highest degree</label>
+          <select id="degree"><option value="none">No degree</option><option value="bachelor">Bachelor's</option><option value="master">Master's</option><option value="phd">PhD</option></select></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>A few things resumes don't say</h3>
+      <p>Age, citizenship and test scores change which routes you qualify for.</p>
+      <div class="row2">
+        <div class="field"><label for="age">Age</label>
+          <select id="age"><option value="u30">Under 30</option><option value="30to39">30–39</option><option value="40to44">40–44</option><option value="45p">45 or over</option></select></div>
+        <div class="field"><label for="origin">Citizenship</label>
+          <select id="origin"><option value="IND">India</option><option value="NGA">Nigeria</option><option value="PAK">Pakistan</option><option value="PHL">Philippines</option><option value="BRA">Brazil</option><option value="OTH">Other</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="english">English level</label>
+          <select id="english"><option value="B1">Intermediate (B1)</option><option value="B2">Upper-intermediate (B2)</option><option value="C1">Advanced (C1+)</option></select>
+          <small id="eng-hint">Not tested yet? Pick your honest estimate.</small></div>
+        <div class="field"><label for="german">German level</label>
+          <select id="german"><option value="none">None</option><option value="A1">Beginner (A1)</option><option value="A2p">A2 or higher</option></select></div>
+      </div>
+      <div class="field"><label for="salary" id="salary-label">Current yearly salary (optional)</label>
+        <input id="salary" type="number" min="0" inputmode="numeric" placeholder="e.g. 2400000">
+        <small>Used only to compare with pay abroad.</small></div>
+    </div>
+    <div class="actions stack">
+      <button class="btn btn-primary" id="go">Show where I can go</button>
+      <button class="btn-link" data-back="s-upload">Start over</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-results" aria-labelledby="h-results">
+    <div class="topbar">
+      <button class="btn-link" data-back="s-profile">Edit profile</button>
+      <span class="muted" style="font-size:13px">Rules checked 5 Oct 2026</span>
+    </div>
+    <h2 id="h-results" tabindex="-1">Your best match</h2>
+    <p class="summary" id="results-summary"></p>
+    <div id="ticket"></div>
+
+    <div class="whatif">
+      <h3>What would change your options?</h3>
+      <p>Tap to see how your results move if you improve one thing.</p>
+      <div class="toggles" id="toggles"></div>
+      <p class="delta" id="delta" aria-live="polite" hidden></p>
+    </div>
+
+    <h3 style="margin-top:34px">All six countries, ranked</h3>
+    <div class="list" id="list"></div>
+
+    <div class="plan" id="plan"></div>
+
+    <div class="couple">
+      <h3>Moving as a couple?</h3>
+      <p>If one partner gets a work visa, the other can often come as a dependant with the right to work in any job. That's true for the UK, Canada (in some cases), Australia, Germany and the Netherlands. Matching both partners together is coming next.</p>
+    </div>
+
+    <div class="actions stack">
+      <button class="btn btn-ghost" id="dl" hidden>Download my report</button>
+      <p class="fine" id="dl-msg" role="status"></p>
+    </div>
+
+    <p class="soon">Ireland, New Zealand, UAE and Singapore are being added next.</p>
+    <div class="legal">
+      <h3>This is an indicative match, not immigration advice</h3>
+      <p>Results compare your profile with published government rules. Only a licensed adviser can confirm whether you qualify for a specific visa.</p>
+    </div>
+    <div class="foot"><span>Salaries are estimates. Currency conversions are approximate.</span><button class="btn-link" id="theme" style="padding:0">Switch light/dark</button></div>
+  </section>
+</main>
+
+<dialog id="adviser" aria-labelledby="adv-h">
+  <h3 id="adv-h">Get your plan checked</h3>
+  <p id="adv-body"></p>
+  <p class="muted" style="font-size:14px">Prototype: booking opens in the full version.</p>
+  <button class="btn btn-primary" id="adv-close">Close</button>
+</dialog>
+<script>
+/* Resume-reading server (Cloudflare Worker). Leave empty to turn AI reading off. */
+const READER_URL="https://wayfind-reader.pkdoddamani.workers.dev";
+/* ===== Data + rules engine (pure, no DOM) ===== */
+const OCC={
+  swe:{label:'Software engineer / developer',plural:'software engineers',grp:'it'},
+  data:{label:'Data scientist / analyst',plural:'data professionals',grp:'it'},
+  cloud:{label:'DevOps / cloud engineer',plural:'DevOps and cloud engineers',grp:'it'},
+  cyber:{label:'Cybersecurity specialist',plural:'cybersecurity specialists',grp:'it'},
+  mech:{label:'Mechanical engineer',plural:'mechanical engineers',grp:'eng'},
+  civil:{label:'Civil engineer',plural:'civil engineers',grp:'eng'},
+  elec:{label:'Electrical / electronics engineer',plural:'electrical engineers',grp:'eng'},
+  nurse:{label:'Registered nurse',plural:'registered nurses',grp:'nurse'},
+  acct:{label:'Accountant / auditor',plural:'accountants',grp:'acct'},
+  finops:{label:'Banking / finance operations',plural:'finance operations professionals',grp:'gen'},
+  hr:{label:'HR / people professional',plural:'HR professionals',grp:'gen'},
+  pm:{label:'Project / product manager',plural:'project and product managers',grp:'gen'},
+  ba:{label:'Business analyst / consultant',plural:'business analysts',grp:'gen'},
+  mkt:{label:'Marketing / sales professional',plural:'marketing and sales professionals',grp:'gen'},
+  ecteach:{label:'Preschool / early childhood teacher',plural:'early childhood teachers',grp:'ec'},
+  other:{label:'Something else (general skilled route)',plural:'people in your field',grp:'gen'}
+};
+/* Prototype salary estimates. Annual local currency; Netherlands = monthly gross excl. holiday pay */
+const PAY={
+  US:{swe:[110000,165000],data:[80000,130000],cloud:[115000,165000],cyber:[105000,160000],mech:[80000,115000],civil:[80000,115000],elec:[85000,120000],nurse:[80000,110000],acct:[70000,100000],finops:[55000,85000],hr:[65000,100000],pm:[100000,150000],ba:[85000,120000],mkt:[65000,110000],ecteach:[35000,55000]},
+  CA:{swe:[85000,125000],data:[70000,100000],cloud:[90000,130000],cyber:[85000,125000],mech:[75000,100000],civil:[75000,100000],elec:[78000,105000],nurse:[75000,100000],acct:[65000,90000],finops:[50000,75000],hr:[60000,85000],pm:[85000,120000],ba:[70000,100000],mkt:[60000,90000],ecteach:[40000,55000]},
+  GB:{swe:[45000,75000],data:[38000,60000],cloud:[50000,80000],cyber:[45000,75000],mech:[35000,55000],civil:[35000,55000],elec:[38000,58000],nurse:[31000,42000],acct:[35000,55000],finops:[30000,48000],hr:[35000,55000],pm:[50000,75000],ba:[40000,65000],mkt:[35000,60000],ecteach:[22000,30000]},
+  DE:{swe:[55000,80000],data:[50000,70000],cloud:[58000,80000],cyber:[55000,78000],mech:[52000,72000],civil:[50000,68000],elec:[54000,74000],nurse:[40000,52000],acct:[48000,65000],finops:[45000,60000],hr:[48000,68000],pm:[60000,85000],ba:[52000,72000],mkt:[45000,65000],ecteach:[38000,50000]},
+  AU:{swe:[100000,145000],data:[90000,125000],cloud:[110000,150000],cyber:[105000,150000],mech:[90000,125000],civil:[95000,130000],elec:[95000,130000],nurse:[80000,105000],acct:[75000,100000],finops:[70000,95000],hr:[80000,110000],pm:[110000,150000],ba:[95000,130000],mkt:[80000,115000],ecteach:[60000,85000]},
+  NL:{swe:[4500,7000],data:[4000,6000],cloud:[4800,7000],cyber:[4600,6800],mech:[4000,5800],civil:[4000,5600],elec:[4200,6000],nurse:[3400,4600],acct:[3800,5500],finops:[3400,4800],hr:[3600,5400],pm:[4800,7000],ba:[4200,6000],mkt:[3600,5600],ecteach:[2800,3800]}
+};
+const C={
+  US:{name:'United States',code:'USA',cur:'$',iso:'USD',monthly:false},
+  CA:{name:'Canada',code:'CAN',cur:'C$',iso:'CAD',monthly:false},
+  GB:{name:'United Kingdom',code:'GBR',cur:'£',iso:'GBP',monthly:false},
+  DE:{name:'Germany',code:'DEU',cur:'€',iso:'EUR',monthly:false},
+  AU:{name:'Australia',code:'AUS',cur:'A$',iso:'AUD',monthly:false},
+  NL:{name:'Netherlands',code:'NLD',cur:'€',iso:'EUR',monthly:true}
+};
+const ORIGIN={IND:{name:'India',iso:'INR',sym:'₹'},NGA:{name:'Nigeria',iso:'NGN',sym:'₦'},PAK:{name:'Pakistan',iso:'PKR',sym:'Rs '},PHL:{name:'Philippines',iso:'PHP',sym:'₱'},BRA:{name:'Brazil',iso:'BRL',sym:'R$'},OTH:{name:'Your country',iso:'USD',sym:'$'}};
+/* Approximate exchange rates, units per 1 USD (prototype) */
+const PER_USD={USD:1,CAD:1.39,GBP:0.75,EUR:0.86,AUD:1.52,INR:88,NGN:1500,PKR:280,PHP:58,BRL:5.4};
+
+const fmt=(n,cur)=>cur+(n>=10000?Math.round(n/1000)+'k':Math.round(n).toLocaleString('en-US'));
+function payRange(k,p){const r=PAY[k][p.occ],c=C[k];if(!r)return 'Varies by role';return fmt(r[0],c.cur)+'–'+fmt(r[1],c.cur)+(c.monthly?'/mo':'/yr');}
+function annualLocal(k,v){return C[k].monthly?v*12:v;}
+function toHome(k,v,origin){const usd=annualLocal(k,v)/PER_USD[C[k].iso];return usd*PER_USD[ORIGIN[origin].iso];}
+function fmtHome(v,origin){
+  const o=ORIGIN[origin];
+  if(o.iso==='INR'){if(v>=1e7)return '₹'+(v/1e7).toFixed(1)+' Cr';return '₹'+Math.round(v/1e5)+'L';}
+  if(v>=1e6)return o.sym+(v/1e6).toFixed(v>=1e8?0:1)+'M';
+  return o.sym+Math.round(v/1000)+'k';
+}
+function homeRange(k,p){const r=PAY[k][p.occ];if(!r)return '—';return fmtHome(toHome(k,r[0],p.origin),p.origin)+'–'+fmtHome(toHome(k,r[1],p.origin),p.origin)+'/yr';}
+
+const eng=e=>({B1:1,B2:2,C1:3})[e];
+const grp=p=>OCC[p.occ].grp;
+function salaryGate(k,p,threshold,label){
+  const cur=C[k].cur,t=fmt(threshold,cur)+(C[k].monthly?'/mo':'');
+  if(!PAY[k][p.occ])return{sal:1,s:'maybe',t:`<b>Salary:</b> you need an offer of at least ${t}. Check typical pay for your exact role.`};
+  const [lo,hi]=PAY[k][p.occ];
+  if(lo>=threshold)return{sal:1,s:'ok',t:`<b>Salary:</b> typical pay for your role clears the ${label} of ${t}.`};
+  if(hi>=threshold)return{sal:1,s:'maybe',t:`<b>Salary:</b> you need an offer of at least ${t}. Typical pay is ${payRange(k,p)}, so aim for the upper end.`};
+  return{sal:1,s:'gap',t:`<b>Salary:</b> typical pay (${payRange(k,p)}) is below the ${label} of ${t}.`};
+}
+
+const RULES={
+  GB(p){
+    const g=[],G=grp(p);
+    if(G==='ec'){
+      g.push({s:'gap',t:'<b>Job level:</b> nursery and preschool roles are usually below graduate level (RQF 6), so they rarely qualify for the Skilled Worker visa.'});
+      g.push(salaryGate('GB',p,41700,'general minimum'));
+      g.push(eng(p.english)<2?{s:'gap',t:'<b>English:</b> B2 is required.'}:{s:'ok',t:'<b>English:</b> meets the B2 requirement.'});
+      return{route:'Skilled Worker visa',sponsor:'Employer sponsor needed',g,
+        steps:['Early years roles are hard to sponsor in the UK. Focus on other countries first.','If a partner moves on their own UK visa, dependants can usually work in any job.'],
+        alt:'Moving as a dependant of a partner\'s UK work visa usually gives you the right to work in any job, including early years.',
+        src:'GOV.UK Immigration Rules (Skilled Worker, RQF 6 from July 2025).',sponsorData:'reg'};
+    }
+    if(G==='nurse'){
+      g.push({s:'maybe',t:'<b>Licence:</b> register with the Nursing and Midwifery Council (NMC): a computer-based test, then a practical exam (OSCE).'});
+      g.push(eng(p.english)===3?{s:'ok',t:'<b>English:</b> the NMC asks for IELTS 7.0 (writing 6.5) or OET grade B. Your level should get there.'}:{s:'gap',t:'<b>English:</b> the NMC asks for IELTS 7.0 (writing 6.5) or OET grade B, roughly C1 level.'});
+      g.push({s:'ok',t:'<b>Sponsor:</b> NHS trusts are licensed sponsors and recruit overseas nurses regularly.'});
+      g.push({s:'maybe',t:'<b>Salary:</b> health-route pay rules differ from the general £41,700 minimum. NHS pay scales usually apply.'});
+      return{route:'Health and Care Worker visa',sponsor:'Employer sponsor needed',g,
+        steps:['Take IELTS Academic or OET and aim for the NMC scores.','Start NMC registration with the computer-based test.','Apply to NHS trusts that run international nurse programmes.'],
+        alt:'Some NHS trusts cover OSCE and relocation costs as part of international recruitment.',
+        src:'NMC registration requirements; GOV.UK Health and Care Worker visa.',sponsorData:'reg'};
+    }
+    g.push(p.degree==='none'?{s:'maybe',t:'<b>Job level:</b> the role must be graduate level (RQF 6). Employers usually expect a degree.'}:{s:'ok',t:'<b>Job level:</b> your degree fits the graduate-level (RQF 6) requirement.'});
+    g.push(p.age==='u30'?salaryGate('GB',p,33400,'new-entrant minimum'):salaryGate('GB',p,41700,'general minimum'));
+    g.push(eng(p.english)<2?{s:'gap',t:'<b>English:</b> B2 is required for new applicants since January 2026.'}:{s:'ok',t:'<b>English:</b> meets the B2 requirement.'});
+    g.push({s:'maybe',t:'<b>Sponsor:</b> you need an offer from a licensed sponsor. The UK publishes the full list daily, so you can target only employers who can hire you.'});
+    return{route:'Skilled Worker visa',sponsor:'Employer sponsor needed',g,
+      steps:[eng(p.english)<2?'Book an approved English test (SELT) and aim for B2.':'Keep a valid approved English test result (B2).','Search only employers on the UK register of licensed sponsors.','Target offers at or above £41,700 or the role\'s going rate, whichever is higher.'],
+      alt:'No sponsor? The High Potential Individual visa is open if your degree (last 5 years) is from a university on the UK\'s Global Universities List.',
+      src:'GOV.UK Immigration Rules (Skilled Worker, July 2025 and January 2026 changes); register of licensed sponsors.',sponsorData:'reg'};
+  },
+  DE(p){
+    const g=[],G=grp(p);
+    if(G==='ec'){
+      g.push({s:'maybe',t:'<b>Recognition:</b> preschool teachers (Erzieher/in) need their qualification recognised, often with an adaptation course.'});
+      g.push(p.german==='A2p'?{s:'maybe',t:'<b>German:</b> keep going. Childcare roles usually need German B2.'}:{s:'gap',t:'<b>German:</b> childcare roles usually need German B2.'});
+      g.push({s:'ok',t:'<b>Demand:</b> Germany has a well-documented shortage of childcare staff.'});
+      g.push({s:'maybe',t:'<b>Job offer:</b> needed before applying, unless you use the Opportunity Card to search.'});
+      return{route:'Skilled worker visa with recognition',sponsor:'Job offer needed',g,
+        steps:['Start German now: B2 is the usual target for childcare.','Check recognition of your qualifications on anerkennung-in-deutschland.de.'],
+        alt:'A partner on a German Blue Card can bring you with full work rights, which lets you work while your recognition is completed.',
+        src:'German Residence Act §18a; Federal recognition portal.',sponsorData:'none'};
+    }
+    if(G==='nurse'){
+      g.push({s:'maybe',t:'<b>Recognition:</b> your nursing qualification must be recognised (Anerkennung), often after an adaptation course or exam.'});
+      g.push(p.german==='A2p'?{s:'maybe',t:'<b>German:</b> keep going. Nurses generally need B2 for a licence.'}:{s:'gap',t:'<b>German:</b> nurses generally need German B2 for a licence.'});
+      g.push(p.age==='45p'?{s:'maybe',t:'<b>Age:</b> applicants 45+ need a minimum salary or proof of pension provision.'}:{s:'ok',t:'<b>Salary:</b> no fixed salary minimum on this route.'});
+      g.push({s:'maybe',t:'<b>Job offer:</b> needed. Many German hospitals recruit internationally and support recognition.'});
+      return{route:'Skilled worker visa with recognition',sponsor:'Job offer needed',g,
+        steps:['Start German now: B2 is the target for nurses.','Check your qualification on the recognition portal (anerkennung-in-deutschland.de).','Look at hospital recruitment programmes that include language training.'],
+        alt:'A recognition partnership lets you start work in Germany while your recognition is completed.',
+        src:'German Residence Act §18a and §16d; Federal recognition portal.',sponsorData:'none'};
+    }
+    const shortage=G==='it'||G==='eng';
+    if(p.degree==='none'){
+      g.push(G==='it'&&p.years>=3?{s:'ok',t:'<b>Qualification:</b> IT specialists can qualify without a degree with 3+ years of relevant experience.'}:{s:'gap',t:'<b>Qualification:</b> the Blue Card needs a recognised degree.'});
+    } else g.push({s:'ok',t:'<b>Qualification:</b> your degree should qualify. Check it is listed as comparable in the anabin database.'});
+    g.push(salaryGate('DE',p,shortage?45934:50700,shortage?'shortage-occupation minimum':'general minimum'));
+    if(p.age==='45p')g.push({s:'maybe',t:'<b>Age 45+:</b> first-time applicants need a salary of at least €55,770, or proof of adequate pension provision.'});
+    g.push({s:'ok',t:p.german==='none'?'<b>Language:</b> no German needed for the Blue Card, though A2+ widens your job options a lot.':'<b>Language:</b> no German required, and yours is a real plus in job searches.'});
+    g.push({s:'maybe',t:'<b>Job offer:</b> you need a German employer\'s offer, but no special sponsor licence.'});
+    const opp=eng(p.english)>=2||p.german!=='none';
+    return{route:'EU Blue Card',sponsor:'Job offer needed',g,
+      steps:['Check your degree in anabin, or get a comparability statement from the ZAB.','Search German job boards in English; many tech and engineering roles are English-speaking.',p.german==='none'?'Start German to A2; it helps with jobs and daily life.':'Keep building German toward B1.'],
+      alt:opp?'No offer yet? The Opportunity Card lets you look for work in Germany for up to a year. You appear to meet its language condition; you\'d also need 6 points and about €13,000 in funds.':'The Opportunity Card (job-search visa) needs English B2 or German A1, plus 6 points.',
+      src:'German Residence Act §18g (Blue Card), 2026 salary thresholds; Federal Employment Agency bottleneck analysis.',sponsorData:'none'};
+  },
+  NL(p){
+    const g=[],t=p.age==='u30'?4357:5942,G=grp(p);
+    if(G==='ec'){
+      g.push({s:'gap',t:'<b>Language:</b> childcare and preschool roles in the Netherlands require Dutch.'});
+      g.push(salaryGate('NL',p,p.age==='u30'?4357:5942,p.age==='u30'?'under-30 minimum':'30+ minimum'));
+      return{route:'Highly Skilled Migrant permit',sponsor:'Recognised sponsor needed',g,
+        steps:['Childcare in the Netherlands is mainly open to Dutch speakers.','International schools are the exception; look at their early years openings.'],
+        alt:'A partner on a Dutch work permit can bring you with the right to work in any job.',
+        src:'IND 2026 income requirements.',sponsorData:'reg'};
+    }
+    if(grp(p)==='nurse'){
+      g.push({s:'gap',t:'<b>Licence:</b> nurses must be in the BIG register, which requires Dutch (usually B2) and a qualification assessment.'});
+      g.push(salaryGate('NL',p,t,p.age==='u30'?'under-30 minimum':'30+ minimum'));
+      g.push({s:'maybe',t:'<b>Sponsor:</b> the employer must be an IND-recognised sponsor.'});
+      return{route:'Highly Skilled Migrant permit',sponsor:'Recognised sponsor needed',g,
+        steps:['Weigh up learning Dutch to B2; it\'s required for BIG registration.','Check the BIG register\'s procedure for foreign-qualified nurses.'],
+        alt:'Nursing in the Netherlands is mainly open to Dutch speakers. English-speaking destinations are usually faster.',
+        src:'BIG register (CIBG); IND 2026 income requirements.',sponsorData:'reg'};
+    }
+    g.push(salaryGate('NL',p,t,p.age==='u30'?'under-30 minimum':'30+ minimum'));
+    g.push({s:'ok',t:'<b>Degree and language:</b> this route has no degree or language test.'});
+    g.push({s:'maybe',t:'<b>Sponsor:</b> the employer must be an IND-recognised sponsor. The register is public.'});
+    return{route:'Highly Skilled Migrant permit',sponsor:'Recognised sponsor needed',g,
+      steps:['Target employers on the IND public register of recognised sponsors.','Negotiate pay above the monthly minimum (excluding holiday pay).','Note: the expat tax benefit drops from 30% to 27% in January 2027.'],
+      alt:'Salary too low for this route? The EU Blue Card has a reduced rate (€4,754/month) for some profiles but needs a recognised degree. Recent graduates of Dutch or top-ranked universities can use the reduced Highly Skilled Migrant rate (€3,122/month).',
+      src:'IND 2026 income requirements; public register of recognised sponsors.',sponsorData:'reg'};
+  },
+  CA(p){
+    const g=[],G=grp(p);
+    g.push(eng(p.english)<2?{s:'gap',t:'<b>English:</b> you need at least CLB 7 (about B2) on an approved test.'}:eng(p.english)===3?{s:'ok',t:'<b>English:</b> CLB 9+ scores earn many more ranking points.'}:{s:'ok',t:'<b>English:</b> meets the CLB 7 minimum. A higher score adds many points.'});
+    g.push({u30:{s:'ok',t:'<b>Age:</b> you get the highest age points.'},'30to39':{s:'maybe',t:'<b>Age:</b> age points start declining after 29.'},'40to44':{s:'maybe',t:'<b>Age:</b> age points are low in your 40s.'},'45p':{s:'gap',t:'<b>Age:</b> almost no age points after 45, which makes an invitation unlikely.'}}[p.age]);
+    g.push(p.years<1?{s:'gap',t:'<b>Experience:</b> you need at least 1 year of continuous skilled work.'}:p.degree==='none'?{s:'maybe',t:'<b>Education:</b> no degree means fewer points.'}:{s:'ok',t:'<b>Education:</b> your degree counts once it\'s assessed (ECA).'});
+    if(G==='ec')g.push({s:'maybe',t:'<b>Certification:</b> early childhood educators need provincial certification. Education is one of the 2026 draw categories; check which roles it covers.'});
+    else if(G==='nurse')g.push({s:'maybe',t:'<b>Licence:</b> start with NNAS, then a provincial nursing licence. Healthcare has its own draw category.'});
+    else g.push({s:'ok',t:'<b>Job offer:</b> not needed. Express Entry is points-based.'});
+    return{route:'Express Entry (permanent residence)',sponsor:'No job offer needed',g,
+      steps:[eng(p.english)<2?'Take IELTS General or CELPIP and aim for CLB 7, ideally 9.':'Retake the English test if you can reach CLB 9; it\'s the biggest points lever.','Get an Educational Credential Assessment (ECA) for your degree.',G==='nurse'?'Open an NNAS file to start nursing recognition.':G==='ec'?'Check early childhood educator certification in your target province.':G==='gen'?'Look at provincial nominee streams that match your field.':'Check whether your occupation fits a 2026 draw category such as STEM.'],
+      alt:'Canada has cut new arrivals for 2026–2028, and recent draws favour people already working in Canada. Provincial nominee programs are worth checking too.',
+      src:'IRCC Express Entry and 2026 category-based selection; 2026–2028 Immigration Levels Plan.',sponsorData:'jobs'};
+  },
+  AU(p){
+    const g=[],G=grp(p);
+    g.push(p.age==='45p'?{s:'gap',t:'<b>Age:</b> points-tested visas need you to be under 45.'}:{s:'ok',t:'<b>Age:</b> you\'re within the under-45 limit.'});
+    if(G==='nurse')g.push(eng(p.english)===3?{s:'ok',t:'<b>English:</b> nurse registration needs IELTS 7 in each band. Your level should get there.'}:{s:'gap',t:'<b>English:</b> nurse registration needs IELTS 7 in each band (around C1).'});
+    else g.push(eng(p.english)<2?{s:'gap',t:'<b>English:</b> you need at least Competent English (about IELTS 6 in each band).'}:{s:'ok',t:'<b>English:</b> should meet the Competent English level.'});
+    const body={it:'the ACS (Australian Computer Society)',eng:'Engineers Australia',nurse:'ANMAC, plus registration with the nursing board (NMBA)',acct:'CPA Australia, CA ANZ or IPA',gen:'VETASSESS (which covers most professional roles)',ec:'AITSL for early childhood teachers (needs an early childhood teaching qualification), or ACECQA-recognised qualifications for educators'}[G];
+    g.push({s:'maybe',t:`<b>Skills assessment:</b> needs a positive assessment from ${body}.`});
+    g.push(salaryGate('AU',p,79423,'sponsored-visa minimum'));
+    return{route:'Skilled Independent (189) or Skills in Demand (482)',sponsor:'Points-based or sponsored',g,
+      steps:['Get your skills assessed by '+body.split(',')[0]+'.','Calculate your points: 65 is the minimum, and competitive rounds need more.','Compare state nomination (190/491) for extra points.'],
+      alt:'With an employer offer, the Skills in Demand visa (482) skips the points test if pay meets A$79,423.',
+      src:'Department of Home Affairs (SkillSelect, Skills in Demand, thresholds from 1 July 2026).',sponsorData:'jobs'};
+  },
+  US(p){
+    const g=[],G=grp(p);
+    if(G==='ec'){
+      g.push({s:'gap',t:'<b>Route:</b> preschool roles rarely qualify for H-1B, and there is no dedicated visa for them.'});
+      g.push({s:'maybe',t:'<b>Licence:</b> US states require their own early childhood credentials.'});
+      g.push({s:'gap',t:'<b>Employer:</b> very few US preschools sponsor visas.'});
+      return{route:'No practical work visa',sponsor:'Employer + lottery',g,cap:true,
+        steps:['Focus on Canada or Australia, which recognise early childhood roles.'],
+        alt:'Spouses of H-1B holders can only work once a green-card process reaches a certain stage, so this route is limited for couples too.',
+        src:'USCIS H-1B specialty occupation rules.',sponsorData:'reg'};
+    }
+    if(G==='nurse'){
+      g.push({s:'maybe',t:'<b>Licence:</b> pass the NCLEX-RN and get a VisaScreen certificate.'});
+      g.push({s:'maybe',t:'<b>Employer:</b> hospitals usually sponsor nurses for a green card (EB-3) rather than H-1B.'});
+      g.push(p.origin==='IND'?{s:'gap',t:'<b>Wait time:</b> EB-3 green-card waits for Indian citizens run many years due to per-country caps.'}:{s:'maybe',t:'<b>Wait time:</b> depends on your country in the monthly Visa Bulletin.'});
+      return{route:'EB-3 green card (employer-sponsored)',sponsor:'Employer sponsor needed',g,cap:true,
+        steps:['Prepare for and pass the NCLEX-RN.','Apply for a VisaScreen certificate.','Shortlist US hospitals with international nurse recruitment.'],
+        alt:'Green-card sponsorship takes longer than work visas, but leads straight to permanent residence.',
+        src:'USCIS EB-3; State Department Visa Bulletin.',sponsorData:'reg'};
+    }
+    g.push(p.degree==='none'?{s:'gap',t:'<b>Degree:</b> H-1B needs a bachelor\'s or equivalent in a related field.'}:{s:'ok',t:'<b>Degree:</b> meets the specialty-occupation requirement.'});
+    g.push({s:'maybe',t:'<b>Employer:</b> a US employer must register you in the March lottery.'});
+    g.push(p.years<3?{s:'gap',t:'<b>Lottery odds:</b> the lottery now favours higher pay. Entry-level wages get 1 entry; senior wages get up to 4.'}:{s:'maybe',t:'<b>Lottery odds:</b> weighted by wage level. Senior pay gets more entries, but selection is never guaranteed.'});
+    g.push({s:'maybe',t:'<b>$100,000 fee:</b> for hires from abroad. Courts blocked it (June and September 2026), so it isn\'t being collected, but the government is appealing and one court upheld it.'});
+    const steps=['Target employers with a record of H-1B filings (public US Labor Department data).','Aim for roles at higher wage levels to improve lottery odds.'];
+    if(p.origin==='IND')steps.push('Note: green-card waits for Indian citizens run many years due to per-country caps.');
+    return{route:'H-1B visa',sponsor:'Employer + lottery',g,steps,cap:true,
+      alt:p.degree==='master'||p.degree==='phd'?'With an advanced degree, the EB-2 National Interest Waiver lets you self-petition for a green card without an employer, if your work meets its national-importance test.':'The O-1 visa (extraordinary ability) skips the lottery but needs strong evidence such as awards or publications.',
+      src:'USCIS weighted selection rule (effective Feb 2026); Global Nurse Force v. Trump (N.D. Cal., 30 Sep 2026) and First Circuit order (24 Jul 2026) on the fee; DOL disclosure data.',sponsorData:'reg'};
+  }
+};
+
+function evaluate(p){
+  return Object.keys(RULES).map(k=>{
+    const r=RULES[k](p),pts={ok:2,maybe:1,gap:0};
+    const score=r.g.reduce((a,x)=>a+pts[x.s],0)/r.g.length;
+    const gaps=r.g.filter(x=>x.s==='gap').length;
+    const salMaybe=r.g.some(x=>x.sal&&x.s==='maybe');
+    let level=gaps===0&&!salMaybe&&score>=1.5?'strong':gaps<=1?'possible':'stretch';
+    if(r.cap&&level==='strong')level='possible';
+    const rank={strong:3,possible:2,stretch:1}[level]*10+score;
+    return Object.assign({k,level,rank,score,gaps},r);
+  }).sort((a,b)=>b.rank-a.rank||usdHi(b.k,p)-usdHi(a.k,p));
+}
+function usdHi(k,p){const r=PAY[k][p.occ];return r?annualLocal(k,r[1])/PER_USD[C[k].iso]:0;
+}
+/* ===== App ===== */
+(function(){
+const $=id=>document.getElementById(id);
+
+const SAMPLES=[
+  {p:{occ:'swe',years:6,degree:'bachelor',age:'30to39',origin:'IND',english:'B2',german:'none',salary:2400000},
+   f:{name:'Priya',headline:'Backend engineer, 6 years in fintech and payments',skills:['Java','Spring Boot','Kafka','AWS','PostgreSQL','Microservices'],certifications:['AWS Solutions Architect – Associate']}},
+  {p:{occ:'data',years:3,degree:'master',age:'u30',origin:'NGA',english:'C1',german:'none',salary:''},
+   f:{name:'Tunde',headline:'Data scientist, 3 years in telecoms analytics',skills:['Python','SQL','scikit-learn','Power BI','Forecasting','A/B testing'],certifications:[]}},
+  {p:{occ:'nurse',years:8,degree:'bachelor',age:'30to39',origin:'PHL',english:'B2',german:'none',salary:''},
+   f:{name:'Maria',headline:'Registered nurse, 8 years in ICU and emergency care',skills:['Critical care','Triage','Ventilator management','IV therapy','Patient education'],certifications:['Philippine RN licence','BLS / ACLS']}}
+];
+const ADVISER={CA:'a CICC-licensed immigration consultant or Canadian lawyer',GB:'an IAA-registered adviser or a solicitor',AU:'an OMARA-registered migration agent',US:'a US immigration attorney',DE:'a German immigration lawyer (Rechtsanwalt)',NL:'a Dutch immigration lawyer'};
+const LEVEL={strong:['Strong match','b-strong'],possible:['Possible','b-possible'],stretch:['Stretch','b-stretch']};
+const MARK={ok:'✓',maybe:'!',gap:'✕'};
+const strip=h=>h.replace(/<[^>]+>/g,'');
+
+/* occupation select */
+$('occ').innerHTML=Object.entries(OCC).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+
+/* navigation */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0);const h=document.querySelector('#'+id+' [tabindex="-1"]');if(h)h.focus({preventScroll:true});}
+document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.back)));
+
+const ids=['occ','years','degree','age','origin','english','german','salary'];
+function fill(p){ids.forEach(i=>{if(p[i]!==undefined)$(i).value=p[i];});updateSalaryLabel();}
+function read(){const p={};ids.forEach(i=>p[i]=$(i).value);p.years=Math.max(0,parseInt(p.years)||0);p.salary=parseFloat(p.salary)||0;return p;}
+function updateSalaryLabel(){const o=ORIGIN[$('origin').value];$('salary-label').textContent=`Current yearly salary in ${o.iso} (optional)`;}
+$('origin').addEventListener('change',updateSalaryLabel);
+
+function renderFound(f,note){
+  const el=$('found');
+  if(!f){el.hidden=true;}
+  else{
+    el.hidden=false;
+    el.innerHTML=`<p class="who">${esc(f.name?f.name+' · ':'')}${esc(f.headline||'')}</p>`+
+      ((f.skills||[]).length?`<div class="chips" aria-label="Skills found">${f.skills.slice(0,10).map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>`:'')+
+      (f.note?`<p class="muted" style="font-size:14px;margin-top:10px">${esc(f.note)}</p>`:'')+((f.certifications||[]).length?`<p class="muted" style="font-size:14px;margin-top:10px">Certifications: ${f.certifications.map(esc).join(', ')}</p>`:'');
+  }
+  $('profile-note').hidden=!note;$('profile-note').textContent=note||'';
+}
+function renderCareers(cs){
+  const el=$('careers');
+  if(cs.length<2){el.hidden=true;el.innerHTML='';return;}
+  el.hidden=false;
+  el.innerHTML=`<legend>Your resume shows two careers. Which one should we match?</legend>`+cs.map((c,i)=>`<label class="career"><input type="radio" name="career" value="${i}"${i===0?' checked':''}><span><strong>${esc(c.title||OCC[c.occupation].label)}</strong><span>${OCC[c.occupation].label} · ${Math.round(Number(c.years)||0)} years</span></span></label>`).join('')+`<p class="fine">You can run it again with the other one.</p>`;
+  el.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{const c=cs[inp.value];$('occ').value=c.occupation;$('years').value=Math.round(Number(c.years)||0);}));
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* samples */
+document.querySelectorAll('[data-sample]').forEach(b=>b.addEventListener('click',()=>{
+  const s=SAMPLES[b.dataset.sample];fill(s.p);renderCareers([]);$('occ-hint').textContent='';$('eng-hint').textContent='Not tested yet? Pick your honest estimate.';
+  renderFound(s.f,'Sample profile. Change any detail to see how results shift.');show('s-profile');
+}));
+
+/* upload + paste */
+$('paste-toggle').addEventListener('click',e=>{const p=$('paste'),open=p.hidden;p.hidden=!open;e.currentTarget.setAttribute('aria-expanded',open);if(open)$('paste-text').focus();});
+function consented(){if($('consent').checked)return true;uploadError('Tick the box above to agree before we read your resume.');$('consent').focus();return false;}
+$('paste-go').addEventListener('click',()=>{if(!consented())return;const t=$('paste-text').value.trim();if(t.length<80)return uploadError('Paste a bit more: include your job titles, years and education.');analyse(t,'Pasted text');});
+$('file').addEventListener('click',e=>{if(!consented())e.preventDefault();});
+$('file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)handleFile(f);});
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&consented())handleFile(f);});
+function uploadError(m){const e=$('upload-err');e.textContent=m;e.hidden=!m;}
+
+let ctl=null;
+function stepState(n){['r1','r2','r3'].forEach((id,i)=>{const el=$(id);el.className=i<n?'done':i===n?'now':'';el.querySelector('.ind').textContent=i<n?'✓':'';});}
+
+async function handleFile(f){
+  uploadError('');
+  if(f.size>5*1024*1024)return uploadError('That file is over 5 MB. Try a smaller PDF, or paste the text instead.');
+  $('reading-file').textContent=f.name;stepState(0);show('s-reading');
+  let text='';
+  try{
+    const name=f.name.toLowerCase();
+    if(name.endsWith('.pdf')){
+      if(!window.pdfjsLib)throw new Error('pdf');
+      const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+      for(let i=1;i<=Math.min(pdf.numPages,8);i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(' ')+'\n';}
+    }else if(name.endsWith('.docx')){
+      if(!window.mammoth)throw new Error('docx');
+      text=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;
+    }else text=await f.text();
+  }catch(err){show('s-upload');return uploadError('We couldn\'t open that file. Try a PDF or Word file, or paste the text instead.');}
+  if(text.trim().length<80){show('s-upload');return uploadError('We couldn\'t find text in that file. It may be a scanned image. Paste the text instead.');}
+  analyse(text,f.name,true);
+}
+
+function redact(t){
+  return t.replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,'[email]')
+    .replace(/(https?:\/\/|www\.)\S+/gi,'[link]')
+    .replace(/\b(linkedin|github)\.com\/\S*/gi,'[link]')
+    .replace(/\+?\d[\d\s().-]{8,}\d/g,m=>/^(19|20)\d\d\s*[-\u2013]\s*(19|20)\d\d$/.test(m.trim())?m:'[phone]');
+}
+async function readResume(text,signal){
+  const res=await fetch(READER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:redact(text).slice(0,30000)}),signal});
+  if(res.status===429)throw{code:'rate_limited'};
+  if(!res.ok)throw{code:'failed'};
+  return res.json();
+}
+async function analyse(text,label,fromFile){
+  $('reading-file').textContent=label;show('s-reading');stepState(1);
+  if(!READER_URL||READER_URL.startsWith('__')){manual('AI reading isn\'t switched on yet, so fill in your details below. Everything else works the same.');return;}
+  ctl=new AbortController();
+  const t=setTimeout(()=>stepState(2),2500),limit=setTimeout(()=>ctl.abort(),90000);
+  try{
+    const r=await readResume(text,ctl.signal);clearTimeout(limit);
+    clearTimeout(t);stepState(3);
+    const careers=(Array.isArray(r.careers)?r.careers:[]).filter(c=>c&&OCC[c.occupation]).slice(0,2);
+    if(!careers.length)careers.push({occupation:'other',title:'Your current role',years:0});
+    const origin=ORIGIN[r.country]?r.country:'OTH';
+    const c0=careers[0];
+    fill({occ:c0.occupation,years:Math.round(Number(c0.years)||0),degree:['none','bachelor','master','phd'].includes(r.degree)?r.degree:'bachelor',origin,german:normGerman(r.german),english:'B2',age:'30to39',salary:''});
+    renderCareers(careers);
+    $('occ-hint').textContent=c0.occupation==='other'?'We don\'t have occupation-specific data for this role yet, so we\'ll use general skilled-visa rules. Pick a closer match if there is one.':'Matched from your job titles. Change it if it\'s not right.';
+    $('eng-hint').textContent=r.english_evidence?'Found on your resume: '+r.english_evidence:'Not tested yet? Pick your honest estimate.';
+    renderFound({name:r.name,headline:r.headline,skills:Array.isArray(r.skills)?r.skills:[],certifications:Array.isArray(r.certifications)?r.certifications:[],note:r.degree_note},'Age and English level aren\'t on most resumes, so check those two.');
+    setTimeout(()=>show('s-profile'),400);
+  }catch(e){
+    clearTimeout(t);clearTimeout(limit);
+    if(e&&e.name==='AbortError')return manual('Reading took too long or was stopped, so fill in your details below.');
+    const msg={not_granted:'AI reading was declined, so fill in your details below.',rate_limited:'Too many requests right now. Fill in your details below, or try again in a minute.'}[e&&e.code]||'We couldn\'t read that resume automatically. Fill in your details below.';
+    manual(msg);
+  }
+}
+function normGerman(g){g=String(g||'').toUpperCase().replace(/\s/g,'');if(g==='A2P'||/^(A2|B1|B2|C1|C2)/.test(g))return 'A2p';if(g.startsWith('A1'))return 'A1';return 'none';}
+function manual(note){renderCareers([]);fill({occ:'other',years:3,degree:'bachelor',age:'30to39',origin:'IND',english:'B2',german:'none',salary:''});$('occ-hint').textContent='';renderFound(null,note);show('s-profile');}
+$('stop').addEventListener('click',()=>{if(ctl)ctl.abort();else manual('');});
+
+/* results */
+let base=null,whatif={};
+const WHAT=[
+  {k:'english',label:'English C1',when:p=>p.english!=='C1',apply:p=>({...p,english:'C1'})},
+  {k:'german',label:'German A2+',when:p=>p.german!=='A2p',apply:p=>({...p,german:'A2p'})},
+  {k:'master',label:'A master\'s degree',when:p=>p.degree==='none'||p.degree==='bachelor',apply:p=>({...p,degree:'master'})},
+  {k:'years',label:'+2 years\' experience',when:()=>true,apply:p=>({...p,years:p.years+2})}
+];
+function current(){let p={...base};WHAT.forEach(w=>{if(whatif[w.k])p=w.apply(p);});return p;}
+
+$('go').addEventListener('click',()=>{base=read();whatif={};renderToggles();render(true);show('s-results');});
+function renderToggles(){
+  $('toggles').innerHTML=WHAT.filter(w=>w.when(base)).map(w=>`<button class="tg" aria-pressed="false" data-w="${w.k}">${w.label}</button>`).join('');
+  $('toggles').querySelectorAll('.tg').forEach(b=>b.addEventListener('click',()=>{whatif[b.dataset.w]=!whatif[b.dataset.w];b.setAttribute('aria-pressed',!!whatif[b.dataset.w]);render(false);}));
+  $('delta').hidden=true;
+}
+
+function render(first){
+  const p=current(),res=evaluate(p),top=res[0],c=C[top.k];
+  if(!first){
+    const before=evaluate(base),changes=[];
+    res.forEach(r=>{const b=before.find(x=>x.k===r.k);if(b.level!==r.level)changes.push(`${C[r.k].name} moves from ${LEVEL[b.level][0]} to ${LEVEL[r.level][0]}`);});
+    const any=Object.values(whatif).some(Boolean);
+    $('delta').hidden=!any;
+    $('delta').textContent=changes.length?changes.join('. ')+'.':'No change in match levels, though some gaps in the details below may close.';
+  }
+  const strong=res.filter(r=>r.level==='strong').length;
+  $('results-summary').textContent=strong?`${strong} of 6 countries look like strong matches for ${OCC[p.occ].plural} with your profile.`:'No strong matches yet. Here\'s where you\'re closest, and what would change that.';
+  const now=p.salary?`<small>You earn now: ${fmtHome(p.salary,p.origin)}/yr</small>`:'';
+  $('ticket').innerHTML=`<article class="ticket" aria-label="Best match: ${c.name}">
+    <span class="badge ${LEVEL[top.level][1]}">${LEVEL[top.level][0]}</span>
+    <div class="route" aria-hidden="true"><span>${p.origin==='OTH'?'YOU':p.origin}</span><span class="path"></span><span>${c.code}</span></div>
+    <div class="places"><span>${ORIGIN[p.origin].name}</span><span>${c.name}</span></div>
+    <div class="perf" aria-hidden="true"></div>
+    <dl><div><dt>Typical salary</dt><dd>${payRange(top.k,p)}${p.origin!=='OTH'?`<small>≈ ${homeRange(top.k,p)}</small>`:''}${now}</dd></div>
+      <div><dt>Visa route</dt><dd>${top.route}</dd></div>
+      <div><dt>Sponsorship</dt><dd>${top.sponsor}</dd></div>
+      <div><dt>Gaps to close</dt><dd>${top.gaps||'None'}</dd></div></dl>
+    <button class="btn open" data-open="${top.k}">See why and what to do</button>
+  </article>`;
+  $('ticket').querySelector('[data-open]').addEventListener('click',()=>{const it=$('item-'+top.k);if(!it.classList.contains('open'))toggle(it);it.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
+
+  const openSet=new Set([...document.querySelectorAll('.item.open')].map(x=>x.dataset.k));
+  $('list').innerHTML=res.map(r=>`<div class="item${openSet.has(r.k)?' open':''}" id="item-${r.k}" data-k="${r.k}">
+    <button aria-expanded="${openSet.has(r.k)}" aria-controls="d-${r.k}"><span class="code">${C[r.k].code}</span>
+      <span><span class="name">${C[r.k].name}</span><br><span class="sub">${r.route}</span></span>
+      <span class="right"><span class="badge ${LEVEL[r.level][1]}">${LEVEL[r.level][0]}</span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+    </button><div class="detail" id="d-${r.k}"${openSet.has(r.k)?'':' hidden'}>${detail(r,p)}</div></div>`).join('');
+  $('list').querySelectorAll('.item>button').forEach(b=>b.addEventListener('click',()=>toggle(b.parentElement)));
+  $('list').querySelectorAll('[data-adv]').forEach(b=>b.addEventListener('click',()=>openAdviser(b.dataset.adv)));
+  renderPlan(res);
+}
+function toggle(it){const open=it.classList.toggle('open');it.querySelector('button').setAttribute('aria-expanded',open);it.querySelector('.detail').hidden=!open;}
+
+function detail(r,p){
+  const SPONSOR={
+    reg:`Employers who sponsored ${OCC[p.occ].plural} recently, from official government data, refreshed automatically.`,
+    jobs:`Live openings that match your profile, plus employers with a record of hiring from abroad.`,
+    none:`${C[r.k].name} has no public sponsor list, so this uses live job ads from employers hiring internationally.`
+  }[r.sponsorData];
+  return `<h4>How you compare</h4><ul class="gates">${r.g.map(x=>`<li class="s-${x.s}"><span class="dot" aria-hidden="true">${MARK[x.s]}</span><span><span class="sr">${x.s==='ok'?'Meets:':x.s==='maybe'?'Depends:':'Gap:'}</span>${x.t}</span></li>`).join('')}</ul>
+  <h4>Pay</h4><div class="pay"><div><span>Typical for your role</span><strong>${payRange(r.k,p)}</strong></div>
+    <div><span>In ${ORIGIN[p.origin].iso}</span><strong>≈ ${homeRange(r.k,p)}</strong></div></div>
+    <p class="fine">Before tax and cost of living.${p.salary?` You earn ${fmtHome(p.salary,p.origin)}/yr now.`:''}</p>
+  <h4>Who hires from abroad <span class="tag">Full version</span></h4><p class="module">${SPONSOR}</p>
+  <h4>Your next steps</h4><ol class="steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  <h4>Another route</h4><p class="alt">${r.alt}</p>
+  <button class="btn btn-ghost" data-adv="${r.k}">Get this checked by a licensed adviser</button>
+  <p class="src">Sources: ${r.src}</p>`;
+}
+function renderPlan(res){
+  const top2=res.slice(0,2),items=[];
+  top2.forEach(r=>r.g.filter(x=>x.s==='gap').forEach(x=>items.push({t:'Close a gap for '+C[r.k].name+': '+strip(x.t).replace(/^[^:]+:\s*/,''),w:C[r.k].name})));
+  top2.forEach(r=>r.steps.forEach(s=>{if(!items.some(i=>i.t===s))items.push({t:s,w:C[r.k].name});}));
+  $('plan').innerHTML=`<h3>Your plan for the next 90 days</h3><p>Built from your top two matches: ${top2.map(r=>C[r.k].name).join(' and ')}.</p>
+    <ol>${items.slice(0,6).map(i=>`<li>${i.t}<span>For ${i.w}</span></li>`).join('')}</ol>`;
+}
+
+/* adviser dialog */
+function openAdviser(k){$('adv-body').textContent=`Book a 30-minute call with ${ADVISER[k]}. They'll confirm whether you qualify for ${C[k].name} and the best route for your situation.`;const d=$('adviser');if(d.showModal)d.showModal();}
+$('adv-close').addEventListener('click',()=>$('adviser').close());
+
+/* download report */
+$('dl').hidden=false;
+  $('dl').addEventListener('click',()=>{
+    const p=current(),res=evaluate(p);
+    const lines=[`# Wayfind report`,'',`Profile: ${OCC[p.occ].label}, ${p.years} years, ${p.degree}, citizen of ${ORIGIN[p.origin].name}, English ${p.english}, German ${p.german}`,`Rules checked: 5 October 2026`,''];
+    res.forEach((r,i)=>{lines.push(`## ${i+1}. ${C[r.k].name}: ${LEVEL[r.level][0]}`,`Route: ${r.route} (${r.sponsor})`,`Typical pay: ${payRange(r.k,p)}`,'');r.g.forEach(x=>lines.push(`- [${x.s==='ok'?'meets':x.s==='maybe'?'depends':'gap'}] ${strip(x.t)}`));lines.push('','Next steps:');r.steps.forEach(s=>lines.push('- '+s));lines.push('');});
+    lines.push('This is an indicative match based on published rules, not immigration advice.');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown'}));a.download='wayfind-report.md';document.body.appendChild(a);a.click();a.remove();
+    $('dl-msg').textContent='Report downloaded.';
+  });
+
+$('theme').addEventListener('click',()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=dark?'light':'dark';});
+})();
+</script>
+</body></html>
