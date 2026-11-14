@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check a job offer · Nextshore</title>
+<meta name="description" content="Free check for overseas job offers. Compares the employer and agent against official UK, Dutch and Indian government lists, and flags illegal fees and visit-visa scams.">
+<meta property="og:title" content="Before you pay anyone for a job abroad, check here">
+<meta property="og:description" content="Free. Checks the employer and agent against official government lists in seconds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F7F6;--surface:#FFFFFF;--ink:#13263F;--ink-soft:#4A5B70;--line:#D5DFDC;--sea:#DDEBE7;--ok:#0E7C66;--ok-bg:#E1F2EC;--maybe:#8F6200;--maybe-bg:#FBF0D3;--gap:#A63D2A;--gap-bg:#F8E3DE;--focus:#2B6CB0;--body:"Public Sans","Segoe UI",Roboto,Arial,sans-serif;--display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#0F1B2A;--surface:#16263A;--ink:#E7EEF3;--ink-soft:#A9B8C6;--line:#2A3D53;--sea:#1C3346;--ok:#4CC3A3;--ok-bg:#16362F;--maybe:#E7B54A;--maybe-bg:#3A3018;--gap:#EE8B75;--gap-bg:#3D2420;--focus:#7FB2F0;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--body)}
+main{max-width:720px;margin:0 auto;padding:24px 16px 64px}
+a{color:var(--focus)}
+h1,h2,h3{font-family:var(--display);line-height:1.2;margin:0 0 8px}
+h1{font-size:clamp(28px,6vw,40px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+.brand{font:700 15px var(--display);letter-spacing:.02em;color:var(--ink-soft);text-decoration:none;display:inline-block;margin-bottom:24px}
+.lede{color:var(--ink-soft);font-size:17px;margin:0 0 24px;max-width:58ch}
+.trust{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 32px;padding:0;list-style:none}
+.trust li{background:var(--sea);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:500}
+form,.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px}
+fieldset{border:0;padding:0;margin:0 0 24px}
+legend{font:700 17px var(--display);margin-bottom:12px;padding:0}
+label{display:block;font-weight:600;font-size:14px;margin:0 0 4px}
+.hint{font-weight:400;color:var(--ink-soft);font-size:13px}
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px}
+textarea{min-height:120px;resize:vertical}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.row{display:grid;gap:16px;margin-bottom:16px}
+@media (min-width:560px){.row.two{grid-template-columns:1fr 1fr}.row.three{grid-template-columns:2fr 1fr 1fr}}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choices label{display:flex;align-items:center;gap:8px;font-weight:500;border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer;margin:0;background:var(--paper)}
+.choices input{accent-color:var(--ok);width:18px;height:18px;margin:0}
+.checks{display:grid;gap:8px}
+.checks label{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:0;cursor:pointer;padding:6px 0}
+.checks input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--gap);flex:none}
+.hidden{display:none}
+button{font:600 16px var(--body);border-radius:8px;min-height:48px;padding:0 20px;cursor:pointer;border:1px solid transparent}
+.primary{background:var(--ink);color:var(--paper);width:100%}
+.primary:hover{opacity:.92}
+.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.result{margin-top:24px}
+.verdict{border-radius:12px;padding:20px 24px;margin-bottom:16px}
+.verdict h2{font-size:24px;margin:0 0 4px}
+.verdict p{margin:0}
+.v-red{background:var(--gap-bg);color:var(--gap)}
+.v-amber{background:var(--maybe-bg);color:var(--maybe)}
+.v-green{background:var(--ok-bg);color:var(--ok)}
+.v-red p,.v-amber p,.v-green p{color:var(--ink)}
+.finding{border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:14px 16px;margin-bottom:10px;background:var(--surface)}
+.finding h3{font-size:16px;margin:0 0 4px;display:flex;gap:8px;align-items:baseline}
+.finding p{margin:0 0 6px;color:var(--ink)}
+.finding .src{font-size:13px}
+.f-red{border-left-color:var(--gap)}.f-amber{border-left-color:var(--maybe)}.f-ok{border-left-color:var(--ok)}.f-info{border-left-color:var(--focus)}
+.tag{font:700 11px var(--body);text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:4px;flex:none}
+.f-red .tag{background:var(--gap-bg);color:var(--gap)}.f-amber .tag{background:var(--maybe-bg);color:var(--maybe)}.f-ok .tag{background:var(--ok-bg);color:var(--ok)}.f-info .tag{background:var(--sea);color:var(--ink)}
+.suggest{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+.suggest button{min-height:40px;font-size:14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.actions a,.actions button{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.wa{background:#1F7A4D;color:#fff;font:600 16px var(--body);border-radius:8px;min-height:48px;padding:0 20px}
+.small{font-size:13px;color:var(--ink-soft)}
+.err{color:var(--gap);font-weight:600}
+footer{margin-top:40px;font-size:13px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="./">NEXTSHORE</a>
+  <h1>Before you pay anyone for a job abroad, check here.</h1>
+  <p class="lede">Free. We check the employer and the agent against official government lists and flag illegal fees and visa tricks. It takes a minute.</p>
+  <ul class="trust" aria-label="What we check against">
+    <li>UK Home Office sponsor register</li>
+    <li>Netherlands IND sponsor register</li>
+    <li>India MEA licensed and illegal agents</li>
+  </ul>
+
+  <form id="f" novalidate>
+    <fieldset>
+      <legend>The job</legend>
+      <div class="row two">
+        <div><label for="country">Country</label>
+          <select id="country" name="country">
+            <option value="GB">United Kingdom</option><option value="AE">UAE (Dubai, Abu Dhabi)</option>
+            <option value="SA">Saudi Arabia</option><option value="QA">Qatar</option><option value="KW">Kuwait</option>
+            <option value="OM">Oman</option><option value="BH">Bahrain</option><option value="NL">Netherlands</option>
+            <option value="OTHER">Another country</option>
+          </select></div>
+        <div><label for="jobTitle">Job title</label><input type="text" id="jobTitle" name="jobTitle" autocomplete="off"></div>
+      </div>
+      <div class="row two">
+        <div><label for="company">Employer's name <span class="hint">as written on the offer</span></label><input type="text" id="company" name="company" autocomplete="off"></div>
+        <div><label for="website">Employer's website <span class="hint">optional</span></label><input type="text" id="website" name="website" inputmode="url" placeholder="e.g. company.co.uk" autocomplete="off"></div>
+      </div>
+      <div class="row three" id="salaryRow">
+        <div><label for="salary">Salary offered <span class="hint">optional</span></label><input type="number" id="salary" name="salary" min="0" inputmode="decimal"></div>
+        <div><label for="currency">Currency</label><select id="currency"><option>GBP</option><option>EUR</option><option>AED</option><option>SAR</option><option>QAR</option><option>INR</option><option>USD</option></select></div>
+        <div><label for="period">Per</label><select id="period"><option value="year">year</option><option value="month">month</option><option value="hour">hour</option></select></div>
+      </div>
+      <div><label for="senderEmail">Email the offer came from <span class="hint">optional</span></label><input type="email" id="senderEmail" name="senderEmail" autocomplete="off"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Is an agent or consultant involved?</legend>
+      <div class="choices" role="radiogroup">
+        <label><input type="radio" name="hasAgent" value="yes" checked> Yes</label>
+        <label><input type="radio" name="hasAgent" value="no"> No, the employer contacted me</label>
+      </div>
+      <div id="agentBox" style="margin-top:16px">
+        <div class="row two">
+          <div><label for="agentName">Agent or agency name</label><input type="text" id="agentName" autocomplete="off"></div>
+          <div><label for="agentPhone">Their phone or WhatsApp</label><input type="tel" id="agentPhone" autocomplete="off"></div>
+        </div>
+        <div class="row two">
+          <div><label for="agentEmail">Their email</label><input type="email" id="agentEmail" autocomplete="off"></div>
+          <div><label for="agentLicence">Licence (RC) number <span class="hint">if they gave one</span></label><input type="text" id="agentLicence" placeholder="e.g. B-0453/MUM/PER/…" autocomplete="off"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Money and visa</legend>
+      <div class="row two">
+        <div><label for="fee">Total they've asked you to pay, in ₹ <span class="hint">0 if nothing</span></label><input type="number" id="fee" min="0" inputmode="numeric"></div>
+        <div><label for="visaType">Visa they will arrange</label>
+          <select id="visaType"><option value="unknown">Don't know</option><option value="work">Work / employment visa</option><option value="visit">Visit or tourist visa</option></select></div>
+      </div>
+      <p style="margin:0 0 8px;font-weight:600;font-size:14px">Tick anything that happened</p>
+      <div class="checks">
+        <label><input type="checkbox" name="asked" value="sponsorshipFee"> They asked me to pay for sponsorship, a CoS or a work permit</label>
+        <label><input type="checkbox" name="asked" value="noInterview"> I got the offer without a proper interview</label>
+        <label><input type="checkbox" name="asked" value="chatOnly"> We only talk on WhatsApp, Telegram or social media</label>
+        <label><input type="checkbox" name="asked" value="personalAccount"> They want payment by UPI or to a personal account</label>
+        <label><input type="checkbox" name="asked" value="urgency"> They're pushing me to pay quickly</label>
+        <label><input type="checkbox" name="asked" value="guarantee"> They promise a guaranteed visa or job</label>
+        <label><input type="checkbox" name="asked" value="noContract"> I don't have a signed employment contract</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <label for="text">Paste their message or offer letter <span class="hint">optional · we look for phone numbers, emails, fees and warning words</span></label>
+      <textarea id="text"></textarea>
+    </fieldset>
+
+    <button class="primary" type="submit" id="go">Check this offer</button>
+    <p class="small" style="margin:12px 0 0">The check runs on your device. We don't store or send what you type.</p>
+  </form>
+
+  <section id="out" class="result" aria-live="polite"></section>
+
+  <footer>
+    <p>This tool checks public government lists and common warning signs. It can't prove an offer is genuine: a scammer can use a real company's name. Always confirm through the company's own website, and never pay before you have a signed contract and a visa.</p>
+    <p>To report an illegal agent, use <a href="https://madad.gov.in/" rel="noopener">MADAD</a> or <a href="https://emigrate.gov.in/" rel="noopener">eMigrate</a>. Rules last checked <span id="checked"></span>.</p>
+  </footer>
+</main>
+
+<script type="module">
+import { checkOffer, RULES_CHECKED } from './checker.js';
+const DATA = './offer-data/';
+const cache = new Map();
+const load = (p) => {
+  if (!cache.has(p)) cache.set(p, fetch(DATA + p).then((r) => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); }));
+  return cache.get(p);
+};
+load('meta.json').catch(() => {});
+const $ = (id) => document.getElementById(id);
+$('checked').textContent = new Date(RULES_CHECKED).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const syncAgent = () => { $('agentBox').classList.toggle('hidden', document.querySelector('input[name=hasAgent]:checked').value !== 'yes'); };
+document.querySelectorAll('input[name=hasAgent]').forEach((r) => r.addEventListener('change', syncAgent));
+const syncCountry = () => {
+  const c = $('country').value;
+  const cur = { GB: 'GBP', NL: 'EUR', AE: 'AED', SA: 'SAR', QA: 'QAR' }[c];
+  if (cur) $('currency').value = cur;
+};
+$('country').addEventListener('change', syncCountry);
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LABEL = { red: 'Stop', amber: 'Check', ok: 'Found', info: 'Note' };
+
+function read() {
+  const hasAgent = document.querySelector('input[name=hasAgent]:checked').value === 'yes';
+  const asked = {};
+  document.querySelectorAll('input[name=asked]:checked').forEach((c) => (asked[c.value] = true));
+  return {
+    country: $('country').value, company: $('company').value.trim(), jobTitle: $('jobTitle').value.trim(),
+    website: $('website').value.trim(), senderEmail: $('senderEmail').value.trim(),
+    salary: { amount: Number($('salary').value) || 0, currency: $('currency').value, period: $('period').value },
+    agent: hasAgent ? { name: $('agentName').value, phone: $('agentPhone').value, email: $('agentEmail').value, licence: $('agentLicence').value } : {},
+    fee: Number($('fee').value) || 0, visaType: $('visaType').value, asked, text: $('text').value,
+  };
+}
+
+function render(r, offer) {
+  const sug = r.employer && !r.employer.exact.length && !(r.employer.prefix || []).length && r.employer.close.length
+    ? `<p style="margin:0 0 4px;font-weight:600">Similar names on the register:</p><div class="suggest">${r.employer.close.map((e) => `<button type="button" class="ghost" data-name="${esc(e.name)}">${esc(e.name)}${e.town ? ' · ' + esc(e.town) : ''}</button>`).join('')}</div>` : '';
+  const verdictWord = { red: 'High risk', amber: 'Some warning signs', green: 'No warning signs found' }[r.verdict];
+  const share = `I checked a job offer${offer.company ? ' from ' + offer.company : ''} on Nextshore: "${verdictWord}". Before you pay anyone for a job abroad, check it free: ${location.href.split('#')[0]}`;
+  const dates = [r.dataAsOf.uk && `UK register ${r.dataAsOf.uk}`, r.dataAsOf.nl && `IND register ${r.dataAsOf.nl}`, r.dataAsOf.in && `MEA lists ${r.dataAsOf.in}`].filter(Boolean).join(' · ');
+  $('out').innerHTML = `
+    <div class="verdict v-${r.verdict}" tabindex="-1" id="verdict"><h2>${esc(r.headline)}</h2><p>${r.findings.length} thing${r.findings.length === 1 ? '' : 's'} checked against official data.</p></div>
+    ${r.findings.map((f) => `<article class="finding f-${f.level}"><h3><span class="tag">${LABEL[f.level]}</span><span>${esc(f.title)}</span></h3><p>${esc(f.detail)}</p>${f.source ? `<a class="src" href="${esc(f.source.url)}" target="_blank" rel="noopener">Source: ${esc(f.source.label)}</a>` : ''}</article>`).join('')}
+    ${sug}
+    ${r.findings.length === 0 ? '<p>Add the employer name, the agent\'s details or paste their message to get a fuller check.</p>' : ''}
+    <div class="actions">
+      <a class="wa" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <button type="button" class="ghost" id="again">Check another offer</button>
+    </div>
+    <p class="small">Data: ${esc(dates)}.</p>`;
+  $('out').querySelectorAll('[data-name]').forEach((b) => b.addEventListener('click', () => { $('company').value = b.dataset.name; $('f').requestSubmit(); }));
+  $('again').addEventListener('click', () => { $('f').reset(); syncAgent(); $('out').innerHTML = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); $('country').focus(); });
+  $('verdict').focus({ preventScroll: true });
+  $('out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('go');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const offer = read();
+    render(await checkOffer(offer, load), offer);
+  } catch (err) {
+    console.error(err);
+    $('out').innerHTML = '<p class="err">We couldn\'t load the government lists just now. Check your connection and try again.</p>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Check this offer';
+  }
+});
+</script>
+</body>
+</html>
