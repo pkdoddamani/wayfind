@@ -1,0 +1,25 @@
+# Refreshes the official registers used by check.html once a day.
+# Place this repo's copy at .github/workflows/refresh-offer-data.yml, with
+# fetch_data.py at the repo root. Data is written to offer-data/.
+name: Refresh offer-checker data
+on:
+  schedule:
+    - cron: "17 2 * * *"   # 07:47 IST daily
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python fetch_data.py offer-data
+      - run: |
+          git config user.name "nextshore-data-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add offer-data
+          git diff --cached --quiet || git commit -m "Refresh offer-checker data $(date -u +%F)"
+          git push
